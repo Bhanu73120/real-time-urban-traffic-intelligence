@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables / secrets
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Generated data
+data/generated/
+data/checkpoints/
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Airflow
+airflow/logs/
+airflow/*.db
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Temporary files
+tmp/
+temp/
