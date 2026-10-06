@@ -1,0 +1,47 @@
+[
+  {
+    "road_id": "ROAD_001",
+    "road_name": "Tech Park Road",
+    "road_type": "arterial",
+    "speed_limit_kmph": 60,
+    "normal_speed_kmph": 45,
+    "latitude": 17.4435,
+    "longitude": 78.3772
+  },
+  {
+    "road_id": "ROAD_002",
+    "road_name": "Central Avenue",
+    "road_type": "arterial",
+    "speed_limit_kmph": 50,
+    "normal_speed_kmph": 40,
+    "latitude": 17.4482,
+    "longitude": 78.3915
+  },
+  {
+    "road_id": "ROAD_003",
+    "road_name": "Lake View Road",
+    "road_type": "collector",
+    "speed_limit_kmph": 40,
+    "normal_speed_kmph": 32,
+    "latitude": 17.4551,
+    "longitude": 78.3843
+  },
+  {
+    "road_id": "ROAD_004",
+    "road_name": "Metro Corridor",
+    "road_type": "arterial",
+    "speed_limit_kmph": 60,
+    "normal_speed_kmph": 48,
+    "latitude": 17.4378,
+    "longitude": 78.4012
+  },
+  {
+    "road_id": "ROAD_005",
+    "road_name": "Market Street",
+    "road_type": "local",
+    "speed_limit_kmph": 30,
+    "normal_speed_kmph": 22,
+    "latitude": 17.4506,
+    "longitude": 78.3698
+  }
+]
