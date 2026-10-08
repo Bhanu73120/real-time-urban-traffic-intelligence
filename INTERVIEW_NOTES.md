@@ -123,3 +123,24 @@ Debugging Lesson: Printing an event in the simulator does not prove Kafka receiv
 Python Lesson: Incorrect indentation placed `time.sleep()` outside `while True`, causing events to be generated continuously. Moving it inside the loop correctly controlled the simulation rate.
 Day 4 Architecture: Python Simulator → Kafka Producer → Vehicle/Incident Topics → Kafka Consumers.
 Next: Spark Structured Streaming will eventually replace the console consumer and process Kafka events in real time.
+
+## Day 5 — Kafka Consumer and Data Validation
+Purpose: Built a Python Kafka consumer to read, deserialize, validate and process vehicle events from Kafka.
+Flow: Traffic Simulator → Kafka Producer → Kafka Topic → Python Consumer → JSON Deserialization → Data Validation → Valid/Rejected Output.
+Kafka Consumer: Used `confluent-kafka.Consumer` to read records from `traffic.vehicle.events`.
+Consumer Group: `group.id` identifies consumers that cooperate to process topic partitions. Our group is `traffic-vehicle-validator`.
+Subscribe: `consumer.subscribe(topics)` registers the topics the consumer reads.
+Poll: `consumer.poll(1.0)` waits up to one second for an available message.
+Deserialization: Converts Kafka message bytes → UTF-8 string → Python dictionary using `json.loads()`.
+Validation: Checks required fields, numeric speed, speed range (0–200 km/h), latitude (-90 to 90) and longitude (-180 to 180).
+Valid Event: Passes all configured validation checks and is printed as VALID.
+Rejected Event: Fails validation or JSON parsing and is printed as REJECTED.
+Consumer Offset: Position used to track progress through a Kafka partition. Offsets are partition-specific.
+Manual Commit: `enable.auto.commit=False` disables automatic commits. `consumer.commit(asynchronous=False)` synchronously commits processed offsets.
+At-Least-Once Processing: Committing after successful handling helps avoid losing unprocessed records, but failures before commit may cause records to be processed again.
+Auto Offset Reset: `earliest` starts from the earliest retained record only when the consumer group has no committed offset.
+Consumer Lag: Difference between the latest available Kafka offset and the consumer group's progress. A slow consumer can accumulate lag.
+Graceful Shutdown: `consumer.close()` releases resources and leaves the consumer group cleanly.
+Testing: Tested valid event, invalid speed, missing road_id and invalid latitude; all four validation tests passed.
+Current Limitation: Rejected records are printed and committed, not yet stored in a dead-letter topic or quarantine store.
+Next: Extend streaming processing and introduce more advanced data-quality checks.
