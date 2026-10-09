@@ -144,3 +144,9 @@ Graceful Shutdown: `consumer.close()` releases resources and leaves the consumer
 Testing: Tested valid event, invalid speed, missing road_id and invalid latitude; all four validation tests passed.
 Current Limitation: Rejected records are printed and committed, not yet stored in a dead-letter topic or quarantine store.
 Next: Extend streaming processing and introduce more advanced data-quality checks.
+
+
+Why are we adding spark.jars.packages?
+- pyspark gives us Spark's Python API.
+- spark-sql-kafka-0-10_2.12 lets Spark Structured Streaming communicate with Kafka.
+- 3.5.6 matches our installed Spark version.
