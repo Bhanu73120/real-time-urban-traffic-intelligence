@@ -47,3 +47,9 @@ dbt/dbt_packages/
 # Temporary files
 tmp/
 temp/
+
+# Spark Structured Streaming checkpoints
+data/checkpoints/
+
+# Local Spark runtime files
+spark-warehouse/

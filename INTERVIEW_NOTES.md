@@ -193,3 +193,21 @@ Raw JSON: Retained to investigate malformed or rejected events.
 Testing: Validated a correct vehicle event and rejected an event with speed 250 km/h.
 Limitation: Invalid records are flagged but not yet stored in quarantine; malformed JSON handling and stricter schema checks can be improved.
 Next: Add streaming aggregations, event-time windows and congestion calculations.
+
+## Day 8 — Real-Time Traffic Aggregation
+Purpose: Calculate road-level traffic metrics and detect congestion using Spark Structured Streaming.
+Flow: Simulator → Kafka → Spark Parsing → Validation → Event-Time Window → Aggregation → Congestion Classification.
+Event Time: Time when an event occurred, rather than when Spark processed it.
+Window: Groups records within a specified time interval; implemented one-minute tumbling windows.
+Watermark: Configured 30-second event-time watermark to manage late data and aggregation state.
+groupBy(): Groups vehicle events by road_id and event-time window.
+avg(): Calculates average vehicle speed per road/window.
+count(): Counts observed vehicle events per road/window.
+Update Mode: Emits updated aggregation results as additional events arrive.
+Micro-Batch: Spark processes newly available records in small batches using a five-second trigger.
+Congestion Rules: HEAVY below 15 km/h, MODERATE from 15 to below 30 km/h, FREE_FLOW at 30 km/h or above.
+Data Quality: Only VALID vehicle events contribute to traffic aggregations.
+Testing: Verified local aggregation tests and live Kafka streaming across all five roads.
+Result: Observed HEAVY, MODERATE and FREE_FLOW, including changing congestion classifications.
+Limitation: Event count is not unique vehicle count; speed thresholds are provisional and not road-specific.
+Next: Improve congestion metrics, event-time processing, state management and checkpoint recovery.
