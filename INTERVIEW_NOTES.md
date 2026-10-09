@@ -150,3 +150,46 @@ Why are we adding spark.jars.packages?
 - pyspark gives us Spark's Python API.
 - spark-sql-kafka-0-10_2.12 lets Spark Structured Streaming communicate with Kafka.
 - 3.5.6 matches our installed Spark version.
+
+## Day 6 — Apache Spark Structured Streaming
+Purpose: Integrated Apache Spark Structured Streaming with Kafka to consume live vehicle traffic events.
+Flow: Python Traffic Simulator → Kafka Producer → Kafka Topic → Spark Structured Streaming → Console.
+PySpark: Python API for Apache Spark, used for distributed data processing.
+SparkSession: Entry point for creating Spark DataFrames and running Spark applications.
+Local Mode: `local[2]` runs Spark locally using two worker threads.
+Kafka Connector: `spark-sql-kafka-0-10_2.12:3.5.6` enables Spark 3.5.6 to communicate with Kafka.
+readStream: Creates a streaming DataFrame that continuously processes incoming data.
+Kafka Source: `format("kafka")` reads records from Apache Kafka.
+Bootstrap Servers: `localhost:9092` identifies the Kafka broker endpoint.
+Subscribe: Reads events from the `traffic.vehicle.events` topic.
+Starting Offsets: `latest` starts a new query from the latest Kafka offsets when no checkpoint exists.
+Kafka Message Format: Kafka keys and values arrive as binary data; we cast them to strings.
+Kafka Metadata: Spark exposes topic, partition, offset and timestamp.
+Micro-Batch Processing: Spark processes available streaming records in small batches.
+Processing Trigger: `processingTime="5 seconds"` requests a new micro-batch approximately every five seconds.
+Console Sink: `writeStream.format("console")` displays streaming records for development and debugging.
+Append Mode: Outputs newly processed rows rather than rewriting previous output.
+Streaming Query: `.start()` launches processing; `query.isActive` indicates whether the query is running.
+Graceful Shutdown: `query.stop()` stops the stream and `spark.stop()` releases Spark resources.
+Checkpointing: Spark supports checkpoint-based recovery, but we have not configured a persistent checkpoint yet.
+Testing: Verified live Kafka events in Spark micro-batches and successful Ctrl+C shutdown.
+Current Limitation: Kafka JSON is still a string; typed schema parsing, validation, watermarking and congestion calculations are pending.
+Next: Parse vehicle JSON into structured columns and begin real-time traffic transformations.
+
+## Day 7 — Spark JSON Parsing and Data Quality
+Purpose: Convert Kafka vehicle JSON into structured Spark DataFrames and validate traffic events.
+Flow: Simulator → Kafka → Spark Structured Streaming → JSON Parsing → Schema Enforcement → Validation → Console.
+StructType: Defines the expected structure of incoming JSON records.
+StructField: Defines individual column names, types and nullability.
+from_json(): Parses a JSON string into a Spark struct using a predefined schema.
+DoubleType: Stores floating-point values such as speed, latitude and longitude.
+withColumn(): Creates or replaces a DataFrame column.
+to_timestamp(): Converts event-time strings into Spark timestamps.
+filter(): Selects records matching a condition; useful for separating valid and rejected data.
+when()/otherwise(): Implements conditional logic similar to SQL CASE WHEN.
+Data Quality: Checks required fields, non-empty identifiers, valid timestamps, speed range and GPS coordinate ranges.
+Kafka Metadata: Preserves topic, partition, offset and timestamp for debugging.
+Raw JSON: Retained to investigate malformed or rejected events.
+Testing: Validated a correct vehicle event and rejected an event with speed 250 km/h.
+Limitation: Invalid records are flagged but not yet stored in quarantine; malformed JSON handling and stricter schema checks can be improved.
+Next: Add streaming aggregations, event-time windows and congestion calculations.

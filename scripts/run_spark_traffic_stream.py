@@ -1,28 +1,41 @@
 import time
 
-from pyspark.sql.functions import col
 from streaming.spark.kafka_stream_reader import read_vehicle_stream
+from streaming.spark.transformations.vehicle_transform import (
+    transform_vehicle_events
+)
+from streaming.spark.transformations.vehicle_quality import (
+    validate_vehicle_stream
+)
 
 
 spark, kafka_df = read_vehicle_stream()
 
-traffic_df = kafka_df.select(
-    col("key").cast("string").alias("road_key"),
-    col("value").cast("string").alias("event_json"),
-    col("topic"),
-    col("partition"),
-    col("offset"),
-    col("timestamp")
+# Convert Kafka JSON into structured columns
+vehicle_df = transform_vehicle_events(kafka_df)
+
+# Apply data-quality rules
+validated_df = validate_vehicle_stream(vehicle_df)
+
+# Display important fields
+output_df = validated_df.select(
+    "event_id",
+    "road_id",
+    "speed_kmph",
+    "event_timestamp",
+    "validation_status",
+    "kafka_partition",
+    "kafka_offset"
 )
 
-print("Spark Kafka traffic stream started.")
+print("Spark traffic transformation stream started.")
 print("Press Ctrl+C to stop.")
 
 query = None
 
 try:
     query = (
-        traffic_df.writeStream
+        output_df.writeStream
         .format("console")
         .outputMode("append")
         .option("truncate", "false")
