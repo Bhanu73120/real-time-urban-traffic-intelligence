@@ -245,3 +245,18 @@ Parquet: Columnar storage format used for Silver and quarantine datasets.
 Full Refresh: Current Silver pipeline rebuilds output from the complete Bronze snapshot.
 Testing: Verified Bronze-to-Silver transformation and 23 clean vehicle records.
 Next: Build incremental Silver processing and Gold analytics.
+
+## Day 12 — Gold Traffic Analytics
+Purpose: Convert clean Silver events into aggregated traffic metrics.
+Flow: MinIO Silver → PySpark Aggregation → MinIO Gold.
+Gold Layer: Stores business-ready traffic analytics.
+Window Aggregation: Groups vehicle events into one-minute intervals.
+groupBy(): Groups events by road_id and event-time window.
+avg(): Calculates average vehicle speed.
+count(): Counts vehicle events within each road-minute group.
+Congestion Detection: HEAVY below 15 km/h, MODERATE below 30 km/h, otherwise FREE_FLOW.
+Batch Processing: Rebuilds Gold analytics from the current Silver snapshot.
+Parquet: Stores analytical results in a columnar format.
+Data Reconciliation: Sum of Gold event_count must equal the Silver event count.
+Verification: 23 Silver events produced 8 Gold rows, representing all 23 events.
+Testing: Checks congestion thresholds, time windows, averages and event counts.
