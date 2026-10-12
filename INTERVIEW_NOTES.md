@@ -229,3 +229,19 @@ Kafka Metadata: Retains topic, partition, offset and timestamp for traceability.
 Docker Volume: Preserves MinIO object data across container restarts.
 Validation: Successfully read 23 Bronze records across five roads.
 Next: Parse, clean and validate Bronze events to create the Silver layer.
+
+## Day 11 — PySpark Silver Layer
+Purpose: Transform raw Bronze vehicle events into clean, validated and deduplicated Silver records.
+Flow: MinIO Bronze → JSON Parsing → Data Validation → Deduplication → MinIO Silver.
+Bronze: Preserves raw JSON and Kafka metadata.
+Silver: Stores structured and validated vehicle data.
+Schema Enforcement: Converts raw JSON into typed Spark columns.
+Data Validation: Checks required fields, timestamps, speed and GPS coordinates.
+Quarantine: Stores rejected records separately for investigation.
+Deduplication: Uses event_id to identify duplicate vehicle events.
+Window Function: row_number() ranks records within each event_id group.
+Ordering: Uses Kafka timestamp, partition and offset to select the retained record.
+Parquet: Columnar storage format used for Silver and quarantine datasets.
+Full Refresh: Current Silver pipeline rebuilds output from the complete Bronze snapshot.
+Testing: Verified Bronze-to-Silver transformation and 23 clean vehicle records.
+Next: Build incremental Silver processing and Gold analytics.
