@@ -211,3 +211,21 @@ Testing: Verified local aggregation tests and live Kafka streaming across all fi
 Result: Observed HEAVY, MODERATE and FREE_FLOW, including changing congestion classifications.
 Limitation: Event count is not unique vehicle count; speed thresholds are provisional and not road-specific.
 Next: Improve congestion metrics, event-time processing, state management and checkpoint recovery.
+
+
+## Day 10 — MinIO Bronze Data Lake
+Purpose: Persist raw Kafka vehicle events in a local data lake using Spark Structured Streaming.
+Flow: Traffic Simulator → Kafka → Spark → Parquet → MinIO Bronze Layer.
+MinIO: S3-compatible object storage running locally through Docker.
+Bucket: Top-level object storage container; created traffic-data-lake.
+Bronze Layer: Stores raw source events without applying business transformations.
+Parquet: Columnar storage format optimized for analytical processing.
+S3A: Hadoop filesystem connector used by Spark to access S3-compatible storage.
+writeStream: Writes continuously arriving records to a streaming sink.
+Append Mode: Writes new records without updating previously written records.
+Checkpoint: Stores streaming progress to support recovery after interruptions.
+_spark_metadata: Tracks files committed by the Spark streaming file sink.
+Kafka Metadata: Retains topic, partition, offset and timestamp for traceability.
+Docker Volume: Preserves MinIO object data across container restarts.
+Validation: Successfully read 23 Bronze records across five roads.
+Next: Parse, clean and validate Bronze events to create the Silver layer.
