@@ -14,7 +14,8 @@ def create_spark_session():
             "spark.jars.packages",
             ",".join([
                 "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.6",
-                "org.apache.hadoop:hadoop-aws:3.3.4"
+                "org.apache.hadoop:hadoop-aws:3.3.4",
+                "org.postgresql:postgresql:42.7.4"
             ])
         )
         .config(

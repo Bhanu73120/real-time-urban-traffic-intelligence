@@ -260,3 +260,21 @@ Parquet: Stores analytical results in a columnar format.
 Data Reconciliation: Sum of Gold event_count must equal the Silver event count.
 Verification: 23 Silver events produced 8 Gold rows, representing all 23 events.
 Testing: Checks congestion thresholds, time windows, averages and event counts.
+
+## Day 13 — PostgreSQL Gold Integration
+Purpose: Load curated Gold traffic analytics into a relational database.
+Flow: MinIO Gold → PySpark JDBC → PostgreSQL.
+PostgreSQL: Open-source relational database running locally in Docker.
+JDBC: Java Database Connectivity used by Spark to read/write relational databases.
+JDBC Driver: org.postgresql:postgresql:42.7.4.
+Database: traffic_analytics.
+Schema: analytics.
+Table: analytics.traffic_analytics.
+Primary Key: (window_start, window_end, road_id).
+Full Refresh: Replaces PostgreSQL Gold data with the latest MinIO Gold snapshot.
+Docker Volume: Preserves PostgreSQL data across container restarts.
+SQL Analytics: Queries traffic congestion, average speeds and vehicle event counts.
+Data Reconciliation: Compares MinIO Gold rows and event totals against PostgreSQL.
+Debugging: Fixed JAVA_GATEWAY_EXITED caused by concatenated Maven dependency coordinates.
+Testing: Validates Gold row counts and total event counts across storage systems.
+Next: dbt transformations and SQL-based analytics.
