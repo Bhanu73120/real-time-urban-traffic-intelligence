@@ -1,0 +1,29 @@
+
+version: 2
+
+models:
+  - name: stg_traffic_analytics
+    description: "Clean staging view of traffic Gold data."
+
+    columns:
+      - name: road_id
+        data_tests:
+          - not_null
+
+      - name: window_start
+        data_tests:
+          - not_null
+
+      - name: window_end
+        data_tests:
+          - not_null
+
+      - name: congestion_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - HEAVY
+                  - MODERATE
+                  - FREE_FLOW

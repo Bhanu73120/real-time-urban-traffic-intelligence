@@ -55,3 +55,8 @@ data/checkpoints/
 
 # Local Spark runtime files
 spark-warehouse/
+
+# dbt generated files
+dbt/traffic_dbt/target/
+dbt/traffic_dbt/logs/
+dbt/traffic_dbt/dbt_packages/

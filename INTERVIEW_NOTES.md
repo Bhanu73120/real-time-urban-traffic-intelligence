@@ -278,3 +278,55 @@ Data Reconciliation: Compares MinIO Gold rows and event totals against PostgreSQ
 Debugging: Fixed JAVA_GATEWAY_EXITED caused by concatenated Maven dependency coordinates.
 Testing: Validates Gold row counts and total event counts across storage systems.
 Next: dbt transformations and SQL-based analytics.
+
+
+## Day 14 — dbt + PostgreSQL Integration
+
+### Architecture
+Spark Gold (MinIO)
+    → PostgreSQL (analytics schema)
+    → dbt Staging (SQL View)
+    → dbt Mart (SQL Table)
+
+### Tools
+- dbt Core with PostgreSQL adapter
+- Docker and Docker Compose
+- PostgreSQL
+- SQL and YAML
+
+### Concepts
+- profiles.yml → Database connection configuration
+- dbt_project.yml → Project settings and model configuration
+- source() → References an existing database table
+- ref() → References another dbt model
+- Staging → Cleans and prepares source data
+- Mart → Produces reporting-ready metrics
+- Materialization → View or table
+- dbt run → Executes SQL models
+- dbt test → Executes data quality checks
+- dbt build → Builds and tests in dependency order
+
+### Models
+1. stg_traffic_analytics → Staging view
+2. road_congestion_summary → Reporting table
+
+### Data Quality
+- not_null → Rejects missing required values
+- unique → Checks for duplicate road IDs
+- accepted_values → Validates congestion categories
+
+### Issues and Solutions
+1. dbt_project.yml missing
+   → Created the project configuration.
+
+2. Git missing in dbt Docker container
+   → Installed Git in the Dockerfile.
+
+3. Permission denied creating profiles.yml
+   → Corrected WSL directory ownership.
+
+### Results
+- 2 dbt models successfully created.
+- 9 data quality tests passed.
+- 5 roads represented in the reporting table.
+- 23 vehicle events in the current sample.

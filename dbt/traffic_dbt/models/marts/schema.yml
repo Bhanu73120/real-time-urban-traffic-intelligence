@@ -1,0 +1,20 @@
+
+version: 2
+
+models:
+  - name: road_congestion_summary
+    description: "Road-level congestion metrics for reporting."
+
+    columns:
+      - name: road_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: total_vehicle_events
+        data_tests:
+          - not_null
+
+      - name: avg_speed_kmph
+        data_tests:
+          - not_null

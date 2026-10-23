@@ -1,0 +1,10 @@
+
+version: 2
+
+sources:
+  - name: traffic_source
+    database: traffic_analytics
+    schema: analytics
+    tables:
+      - name: traffic_analytics
+        description: "Gold traffic analytics loaded from MinIO using PySpark JDBC."
