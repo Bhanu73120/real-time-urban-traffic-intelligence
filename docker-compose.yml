@@ -84,6 +84,101 @@ services:
     profiles:
       - tools
 
+
+  
+  airflow-postgres:
+    image: postgres:16
+    container_name: traffic-airflow-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD:?Set AIRFLOW_DB_PASSWORD in .env}
+      POSTGRES_DB: airflow
+
+    volumes:
+      - traffic_airflow_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    user: "0:0"
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
+        chown -R 50000:0 /opt/airflow/logs
+        exec /entrypoint airflow db migrate
+    environment: &airflow-env
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD}@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY:?Set AIRFLOW_SECRET_KEY in .env}
+      TRAFFIC_DB_HOST: postgres
+      TRAFFIC_DB_PORT: "5432"
+      TRAFFIC_DB_NAME: traffic_analytics
+      TRAFFIC_DB_USER: traffic_user
+      TRAFFIC_DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+
+    volumes: &airflow-volumes
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+    profiles:
+      - airflow
+
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    container_name: traffic-airflow-webserver
+    command: webserver
+    restart: unless-stopped
+    environment: *airflow-env
+    volumes: *airflow-volumes
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+    profiles:
+      - airflow
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    user: "0:0"
+    container_name: traffic-airflow-scheduler
+    command: scheduler
+    restart: unless-stopped
+    environment: *airflow-env
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+    profiles:
+      - airflow
+
+
 volumes:
   traffic_minio_data:
   traffic_postgres_data:
+  traffic_airflow_postgres_data:

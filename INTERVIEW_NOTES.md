@@ -330,3 +330,31 @@ Spark Gold (MinIO)
 - 9 data quality tests passed.
 - 5 roads represented in the reporting table.
 - 23 vehicle events in the current sample.
+
+
+## Day 15 - Airflow Orchestration
+
+- Airflow orchestrates tasks using DAGs.
+- DAG = Directed Acyclic Graph.
+- PythonOperator executes Python functions.
+- DockerOperator launches Docker containers.
+- Airflow validates Gold analytics data in PostgreSQL.
+- Airflow executes dbt build using DockerOperator.
+- dbt build runs SQL models and data quality tests.
+- 2 dbt models built successfully.
+- 9 data quality tests passed.
+- 5 road-level summary records generated.
+- Airflow task dependencies:
+  start_pipeline → check_traffic_data → run_dbt_models → validate_setup
+
+Challenges and solutions:
+- Temporary dbt containers cannot be used with docker exec.
+- Solution: DockerOperator creates a new container for each execution.
+- Airflow needs the correct Docker image, network, and database environment variables.
+- Docker socket access is used only for trusted local development.
+
+Interview explanation:
+I integrated Apache Airflow with PostgreSQL and dbt.
+Airflow validates the analytics data, launches a temporary
+dbt Docker container, builds reporting models, and runs
+data quality tests. The workflow fails if a task fails.
