@@ -358,3 +358,22 @@ I integrated Apache Airflow with PostgreSQL and dbt.
 Airflow validates the analytics data, launches a temporary
 dbt Docker container, builds reporting models, and runs
 data quality tests. The workflow fails if a task fails.
+
+## Day 16 - Automated Gold Loading
+
+- Built a dedicated Spark Docker image using Python 3.11,
+  Java 17, and PySpark 3.5.6.
+- Airflow DockerOperator launches Spark Gold loader.
+- Spark reads Gold Parquet data from MinIO.
+- Spark refreshes PostgreSQL analytics table using JDBC.
+- Empty Gold dataset validation prevents accidental empty refresh.
+- Airflow validates PostgreSQL data after loading.
+- dbt builds 2 models and runs 9 data quality tests.
+- Pipeline follows full-refresh processing.
+- Future improvement: atomic refresh and incremental loading.
+
+Issue:
+Java 17 was unavailable in the Debian Trixie base image.
+
+Solution:
+Used python:3.11-slim-bookworm with OpenJDK 17.

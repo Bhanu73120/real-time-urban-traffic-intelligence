@@ -66,6 +66,25 @@ with DAG(
     )
 
     
+    load_gold = DockerOperator(
+        task_id="load_gold_to_postgres",
+        image="traffic-spark-gold-loader:latest",
+        docker_url="unix://var/run/docker.sock",
+        network_mode="real-time-urban-traffic-intelligence_default",
+        environment={
+            "MINIO_ENDPOINT": "http://minio:9000",
+            "MINIO_ACCESS_KEY": "minioadmin",
+            "MINIO_SECRET_KEY": "minioadmin123",
+            "TRAFFIC_JDBC_URL": (
+                "jdbc:postgresql://postgres:5432/traffic_analytics"
+            ),
+            "POSTGRES_PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        },
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
+
     run_dbt = DockerOperator(
         task_id="run_dbt_models",
         image="real-time-urban-traffic-intelligence-dbt:latest",
@@ -86,4 +105,4 @@ with DAG(
         python_callable=validate_pipeline,
     )
 
-    start >> check_data >> run_dbt >> validate
+    start >> load_gold >> check_data >> run_dbt >> validate
