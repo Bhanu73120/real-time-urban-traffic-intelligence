@@ -7,6 +7,7 @@ from pyspark.sql.types import (
 
 
 vehicle_schema = StructType([
+    StructField("run_id", StringType(), True),
     StructField("event_id", StringType(), True),
     StructField("vehicle_id", StringType(), True),
     StructField("road_id", StringType(), True),

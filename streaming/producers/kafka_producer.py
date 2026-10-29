@@ -1,3 +1,4 @@
+import os
 import json
 
 from confluent_kafka import Producer
@@ -5,7 +6,12 @@ from confluent_kafka import Producer
 
 class KafkaEventProducer:
 
-    def __init__(self, bootstrap_servers="localhost:9092"):
+    def __init__(self, bootstrap_servers=None):
+        bootstrap_servers = bootstrap_servers or os.getenv(
+            "KAFKA_BOOTSTRAP_SERVERS",
+            "localhost:9092",
+        )
+
         self.producer = Producer({
             "bootstrap.servers": bootstrap_servers
         })
