@@ -1,7 +1,7 @@
 import os
 
 from streaming.spark.spark_session import create_spark_session
-
+from streaming.quality.gold_validator import validate_gold_data
 
 GOLD_PATH = "s3a://traffic-data-lake/gold/traffic_analytics/"
 
@@ -25,6 +25,7 @@ def main():
 
     try:
         gold_df = spark.read.parquet(GOLD_PATH)
+        gold_df = validate_gold_data(gold_df)
 
         gold_count = gold_df.count()
 
