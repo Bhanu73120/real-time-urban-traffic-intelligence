@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: road_incident_summary
+    description: "Road-level incident analytics for the latest pipeline run."
+
+    columns:
+      - name: road_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: total_incidents
+        data_tests:
+          - not_null
+
+      - name: high_severity_incidents
+        data_tests:
+          - not_null
+
+      - name: high_severity_percentage
+        data_tests:
+          - not_null

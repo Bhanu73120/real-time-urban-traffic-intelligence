@@ -95,6 +95,7 @@ def main():
 
                 if incident:
                     incident_data = incident.to_dict()
+                    incident_data["run_id"] = run_id
 
                     producer.send_event(
                         topic=INCIDENT_EVENTS_TOPIC,

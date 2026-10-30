@@ -1,4 +1,3 @@
-
 import os
 
 import pandas as pd
@@ -73,14 +72,41 @@ def load_data():
                 cursor.fetchall(), columns=window_columns
             )
 
-        return road_data, window_data
+            cursor.execute(
+                """
+                SELECT
+                    road_id,
+                    total_incidents,
+                    high_severity_incidents,
+                    medium_severity_incidents,
+                    low_severity_incidents,
+                    accidents,
+                    vehicle_breakdowns,
+                    road_closures,
+                    construction_incidents,
+                    high_severity_percentage
+                FROM dbt_traffic.road_incident_summary
+                ORDER BY road_id
+                """
+            )
+
+            incident_columns = [
+                column[0] for column in cursor.description
+            ]
+
+            incident_data = pd.DataFrame(
+                cursor.fetchall(),
+                columns=incident_columns
+            )
+
+        return road_data, window_data, incident_data
 
     finally:
         connection.close()
 
 
 try:
-    road_df, window_df = load_data()
+    road_df, window_df,incident_df = load_data()
 except Exception as exc:
     st.error(f"Unable to load traffic analytics: {exc}")
     st.stop()
@@ -252,3 +278,167 @@ st.caption(
     "Data source: PostgreSQL dbt_traffic schema. "
     "Refresh after a successful pipeline run."
 )
+
+
+
+# -------------------------------------------------------
+# Incident Analytics
+# -------------------------------------------------------
+
+st.divider()
+st.subheader("🚨 Incident Analytics")
+
+if incident_df.empty:
+    st.info("No incidents recorded for the latest pipeline run.")
+
+else:
+    numeric_columns = [
+        "total_incidents",
+        "high_severity_incidents",
+        "medium_severity_incidents",
+        "low_severity_incidents",
+        "accidents",
+        "vehicle_breakdowns",
+        "road_closures",
+        "construction_incidents",
+    ]
+
+    for column in numeric_columns:
+        incident_df[column] = pd.to_numeric(
+            incident_df[column]
+        ).fillna(0).astype(int)
+
+    total_incidents = int(
+        incident_df["total_incidents"].sum()
+    )
+
+    high_incidents = int(
+        incident_df["high_severity_incidents"].sum()
+    )
+
+    medium_incidents = int(
+        incident_df["medium_severity_incidents"].sum()
+    )
+
+    low_incidents = int(
+        incident_df["low_severity_incidents"].sum()
+    )
+
+    affected_roads = int(
+        incident_df["road_id"].nunique()
+    )
+
+    i1, i2, i3, i4 = st.columns(4)
+
+    i1.metric("Total Incidents", total_incidents)
+    i2.metric("High Severity", high_incidents)
+    i3.metric("Medium Severity", medium_incidents)
+    i4.metric("Affected Roads", affected_roads)
+
+    filtered_incidents = incident_df[
+        incident_df["road_id"].isin(selected_roads)
+    ].copy()
+
+    if filtered_incidents.empty:
+        st.info("No incidents on the selected roads.")
+
+    else:
+        left, right = st.columns(2)
+
+        with left:
+            st.subheader("Incidents by Road")
+
+            fig_incident_roads = px.bar(
+                filtered_incidents,
+                x="road_id",
+                y="total_incidents",
+                color="road_id",
+                labels={
+                    "road_id": "Road",
+                    "total_incidents": "Incidents",
+                },
+            )
+
+            fig_incident_roads.update_layout(
+                showlegend=False
+            )
+
+            st.plotly_chart(
+                fig_incident_roads,
+                use_container_width=True
+            )
+
+        with right:
+            st.subheader("Incident Severity Distribution")
+
+            severity_df = pd.DataFrame(
+                {
+                    "Severity": ["High", "Medium", "Low"],
+                    "Count": [
+                        int(filtered_incidents[
+                            "high_severity_incidents"
+                        ].sum()),
+                        int(filtered_incidents[
+                            "medium_severity_incidents"
+                        ].sum()),
+                        int(filtered_incidents[
+                            "low_severity_incidents"
+                        ].sum()),
+                    ],
+                }
+            )
+
+            fig_severity = px.pie(
+                severity_df,
+                names="Severity",
+                values="Count",
+                hole=0.4,
+            )
+
+            st.plotly_chart(
+                fig_severity,
+                use_container_width=True
+            )
+
+        st.subheader("Incident Types")
+
+        type_columns = {
+            "Accidents": "accidents",
+            "Vehicle Breakdowns": "vehicle_breakdowns",
+            "Road Closures": "road_closures",
+            "Construction": "construction_incidents",
+        }
+
+        type_df = pd.DataFrame(
+            [
+                {
+                    "Incident Type": name,
+                    "Count": int(
+                        filtered_incidents[column].sum()
+                    ),
+                }
+                for name, column in type_columns.items()
+            ]
+        )
+
+        fig_types = px.bar(
+            type_df,
+            x="Incident Type",
+            y="Count",
+            color="Incident Type",
+        )
+
+        fig_types.update_layout(showlegend=False)
+
+        st.plotly_chart(
+            fig_types,
+            use_container_width=True
+        )
+
+        st.subheader("Detailed Incident Analytics")
+
+        st.dataframe(
+            filtered_incidents,
+            use_container_width=True,
+            hide_index=True,
+        )

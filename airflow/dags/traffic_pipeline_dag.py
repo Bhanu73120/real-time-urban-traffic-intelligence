@@ -154,6 +154,28 @@ with DAG(
         auto_remove="success",
     )
 
+    ingest_incident_bronze = DockerOperator(
+        task_id="ingest_incidents_to_bronze",
+        image="traffic-spark-gold-loader:latest",
+        command=(
+            "python -m scripts.run_incident_bronze_ingestion "
+            "--available-now"
+        ),
+        docker_url="unix://var/run/docker.sock",
+        network_mode="real-time-urban-traffic-intelligence_default",
+        environment={
+            "KAFKA_BOOTSTRAP_SERVERS": "kafka:29092",
+            "MINIO_ENDPOINT": "http://minio:9000",
+            "MINIO_ACCESS_KEY": os.environ["MINIO_ACCESS_KEY"],
+            "MINIO_SECRET_KEY": os.environ["MINIO_SECRET_KEY"],
+            "INCIDENT_BRONZE_CHECKPOINT_PATH": (
+                "s3a://traffic-data-lake/checkpoints/incident_events/"
+            ),
+        },
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
 
     transform_silver = DockerOperator(
         task_id="transform_bronze_to_silver",
@@ -173,11 +195,44 @@ with DAG(
         auto_remove="success",
     )
 
+    transform_incident_silver = DockerOperator(
+        task_id="transform_incidents_to_silver",
+        image="traffic-spark-gold-loader:latest",
+        command=(
+            "python -m scripts.run_incident_silver_pipeline "
+            "--run-id {{ ti.xcom_pull(task_ids='start_pipeline') }}"
+        ),
+        docker_url="unix://var/run/docker.sock",
+        network_mode="real-time-urban-traffic-intelligence_default",
+        environment={
+            "MINIO_ENDPOINT": "http://minio:9000",
+            "MINIO_ACCESS_KEY": os.environ["MINIO_ACCESS_KEY"],
+            "MINIO_SECRET_KEY": os.environ["MINIO_SECRET_KEY"],
+        },
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
 
     transform_gold = DockerOperator(
         task_id="transform_silver_to_gold",
         image="traffic-spark-gold-loader:latest",
         command="python -m scripts.run_gold_pipeline",
+        docker_url="unix://var/run/docker.sock",
+        network_mode="real-time-urban-traffic-intelligence_default",
+        environment={
+            "MINIO_ENDPOINT": "http://minio:9000",
+            "MINIO_ACCESS_KEY": os.environ["MINIO_ACCESS_KEY"],
+            "MINIO_SECRET_KEY": os.environ["MINIO_SECRET_KEY"],
+        },
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
+    transform_incident_gold = DockerOperator(
+        task_id="transform_incidents_to_gold",
+        image="traffic-spark-gold-loader:latest",
+        command="python -m scripts.run_incident_gold_pipeline",
         docker_url="unix://var/run/docker.sock",
         network_mode="real-time-urban-traffic-intelligence_default",
         environment={
@@ -213,6 +268,27 @@ with DAG(
         auto_remove="success",
     )
 
+    
+    load_incident_gold = DockerOperator(
+        task_id="load_incident_gold_to_postgres",
+        image="traffic-spark-gold-loader:latest",
+        command="python -m scripts.load_incident_gold_to_postgres",
+        docker_url="unix://var/run/docker.sock",
+        network_mode="real-time-urban-traffic-intelligence_default",
+        environment={
+            "MINIO_ENDPOINT": "http://minio:9000",
+            "MINIO_ACCESS_KEY": os.environ["MINIO_ACCESS_KEY"],
+            "MINIO_SECRET_KEY": os.environ["MINIO_SECRET_KEY"],
+            "TRAFFIC_JDBC_URL": (
+                "jdbc:postgresql://postgres:5432/traffic_analytics"
+            ),
+            "POSTGRES_PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        },
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
+
 
     run_dbt = DockerOperator(
         task_id="run_dbt_models",
@@ -238,9 +314,13 @@ with DAG(
         start
         >> generate_traffic_events
         >> ingest_bronze
+        >> ingest_incident_bronze
         >> transform_silver
+        >> transform_incident_silver
         >> transform_gold
+        >> transform_incident_gold
         >> load_gold
+        >> load_incident_gold
         >> check_data
         >> run_dbt
         >> validate
