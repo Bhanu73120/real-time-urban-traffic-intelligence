@@ -26,14 +26,13 @@ SEVERITIES = [
 
 def generate_incident():
     # Select only roads that don't already have an incident
-    available_roads = [
-        road
-        for road in ROADS
-        if road["road_id"] not in ACTIVE_INCIDENTS
-    ]
+    available_roads = []
+    for road in ROADS:
+        if road["road_id"] not in ACTIVE_INCIDENTS: #Don't generate another incident on a road that already has one.
+            available_roads.append(road)
 
     # If every road already has an incident
-    if not available_roads:
+    if not available_roads: #if every road has incident then return none
         return None
 
     road = random.choice(available_roads)
